@@ -1,22 +1,25 @@
+# Etap 1: Budowanie aplikacji
+FROM node:14-alpine AS build
 
-FROM node:alpine AS builder
+LABEL maintainer="Grzegorz Poleszak"
 
 WORKDIR /app
-
 COPY package*.json ./
+RUN npm install
+COPY . .
 
-RUN npm install --production && npm cache clean --force
-
-COPY app.js .
-
-FROM node:alpine AS final
+# Etap 2: Tworzenie ostatecznego obrazu
+FROM node:14-alpine
+LABEL maintainer="Grzegorz Poleszak"
 
 WORKDIR /app
- 
-COPY --from=builder /app .
+COPY --from=build /app /app
 
-EXPOSE 8080
+# Informacje o uruchomieniu serwera
+RUN echo "Grzegorz Poleszak Serwer Dzień Dobry :)" > /app/author.txt
 
-ENV NODE_ENV=production
+# Healthcheck
+HEALTHCHECK CMD curl --fail http://localhost:8080 || exit 1
 
-CMD ["node", "app.js"]
+# Uruchomienie serwera
+CMD ["node", "index.js"]
